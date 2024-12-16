@@ -1,0 +1,107 @@
+<script>
+import router from '@system.router'
+
+export default {
+  // 页面数据模型
+  data: {
+    title: '秒表',
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    isRunning: false,
+    timer: null
+  },
+
+  // 启动计时器
+  startTimer() {
+    if (!this.isRunning) {
+      this.isRunning = true;
+      this.timer = setInterval(() => {
+        this.updateTime();
+      }, 1000);
+    }
+  },
+
+  // 停止计时器
+  stopTimer() {
+    if (this.isRunning) {
+      this.isRunning = false;
+      clearInterval(this.timer);
+    }
+  },
+
+  // 重置计时器
+  resetTimer() {
+    this.stopTimer();
+    this.hours = 0;
+    this.minutes = 0;
+    this.seconds = 0;
+  },
+
+  // 更新时间
+  updateTime() {
+    this.seconds++;
+    if (this.seconds === 60) {
+      this.seconds = 0;
+      this.minutes++;
+      if (this.minutes === 60) {
+        this.minutes = 0;
+        this.hours++;
+      }
+    }
+  },
+
+  // 跳转到详情页面
+  routeDetail() {
+    router.push({
+      uri: '/pages/detail'
+    });
+  }
+}
+</script>
+
+<template>
+  <div class="container">
+    <text class="title">{{ title }}</text>
+    <text class="time-display">
+      {{ hours < 10 ? '0' : '' }}{{ hours }}:
+      {{ minutes < 10 ? '0' : '' }}{{ minutes }}:
+      {{ seconds < 10 ? '0' : '' }}{{ seconds }}
+    </text>
+    <div class="button-group">
+      <button class="btn" @click="startTimer">开始</button>
+      <button class="btn" @click="stopTimer">停止</button>
+      <button class="btn" @click="resetTimer">重置</button>
+      <button class="btn" @click="routeDetail">详情页</button>
+    </div>
+  </div>
+</template>
+
+<style>
+.container {
+  flex-direction: column;
+  align-items: center;
+}
+
+.title {
+  font-size: 40px;
+}
+
+.time-display {
+  font-size: 30px;
+}
+
+.button-group button {
+  margin: 10px;
+}
+
+.btn {
+  width: 200px;
+  height: 40px;
+  margin-top: 20px;
+  border-radius: 5px;
+  background-color: #09ba07;
+  font-size: 20px;
+  color: #ffffff;
+}
+</style>
