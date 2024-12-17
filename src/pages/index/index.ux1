@@ -1,0 +1,149 @@
+<script>
+import router from "@system.router";
+
+export default {
+	// 页面数据模型
+	data: {
+		title: "秒表",
+		hours: 0,
+		minutes: 0,
+		seconds: 0,
+		milliseconds: 0, // 增加毫秒字段
+		isRunning: false,
+		timer: null,
+	},
+
+	// 启动计时器
+	startTimer() {
+		if (!this.isRunning) {
+			this.isRunning = true;
+			this.timer = setInterval(() => {
+				this.updateTime();
+			}, 10); // 每10毫秒更新一次
+		}
+	},
+
+	// 停止计时器
+	stopTimer() {
+		if (this.isRunning) {
+			this.isRunning = false;
+			clearInterval(this.timer);
+		}
+	},
+
+	// 重置计时器
+	resetTimer() {
+		this.stopTimer();
+		this.hours = 0;
+		this.minutes = 0;
+		this.seconds = 0;
+		this.milliseconds = 0; // 重置毫秒
+	},
+
+	// 更新时间
+	updateTime() {
+		this.milliseconds += 10; // 每次增加10毫秒
+		if (this.milliseconds === 1000) {
+			// 毫秒达到1000时进位到秒
+			this.milliseconds = 0;
+			this.seconds++;
+			if (this.seconds === 60) {
+				// 秒达到60时进位到分钟
+				this.seconds = 0;
+				this.minutes++;
+				if (this.minutes === 60) {
+					// 分钟达到60时进位到小时
+					this.minutes = 0;
+					this.hours++;
+				}
+			}
+		}
+	},
+
+	// 跳转到详情页面
+	routeDetail() {
+		router.push({
+			uri: "/pages/detail",
+		});
+	},
+};
+</script>
+
+<template>
+
+		<!-- <text class="title">{{ title }}</text> -->
+		<div class="container">
+			<text class="time-display">
+				{{ hours < 10 ? "0" : "" }}{{ hours }}: {{ minutes < 10 ? "0" : ""
+				}}{{ minutes }}: {{ seconds < 10 ? "0" : "" }}{{ seconds }}:
+			</text>
+			<text class="milliseconds-display">
+				{{ milliseconds < 100 ? (milliseconds < 10 ? "00" : "0") : ""
+				}}{{ milliseconds }}
+			</text>
+			<div class="button-group">
+				<input class="btn btn-lightblue" type="button" value="开始" onclick="startTimer" />
+				<input class="btn btn-red" type="button" value="停止" onclick="stopTimer" />
+				<input class="btn btn-green" type="button" value="重置" onclick="resetTimer" />
+			
+		</div>
+	</div>
+</template>
+
+<style>
+/* mi band 9 screen size 192*490 */
+.container {
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background-color: black;
+	color: #ffffff;
+	/* width: 192px;
+  height: 490px; */
+}
+
+/* .title {
+  flex-direction: column;
+	font-size: 15px;
+	align-items: center;
+	background-color: black;
+	color: #ffffff;
+  margin-top: 0;
+} */
+
+.time-display {
+	font-size: 30px;
+}
+
+.milliseconds-display {
+	font-size: 15px;
+}
+
+.button-group button {
+	display: flex;
+	flex-direction: column; /* 垂直排列按钮 */
+}
+
+.btn {
+	width: 154px;
+	height: 48px;
+	margin-top: 20px;
+	border-radius: 5px;
+	/* background-color: lightblue; */
+	font-size: 20px;
+	margin-top: 20px; /* 调整按钮之间的间距 */
+	border-radius: 5px;
+	color: #ffffff;
+}
+
+.btn-blue {
+  background-color: #03A9F4;
+}
+
+.btn-red {
+  background-color: #F96A5F;
+}
+.btn-green {
+  background-color: #00BCD4;
+}
+</style>

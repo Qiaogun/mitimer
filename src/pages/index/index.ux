@@ -1,34 +1,37 @@
 <script>
-import router from "@system.router";
-
 export default {
-	// 页面数据模型
 	data: {
 		title: "秒表",
 		hours: 0,
 		minutes: 0,
 		seconds: 0,
-		milliseconds: 0, // 增加毫秒字段
+		milliseconds: 0,
 		isRunning: false,
 		timer: null,
+		laps: [], // 存储圈速记录
+	},
+
+	// 开始或暂停计时器
+	toggleTimer() {
+		if (this.isRunning) {
+			this.stopTimer();
+		} else {
+			this.startTimer();
+		}
 	},
 
 	// 启动计时器
 	startTimer() {
-		if (!this.isRunning) {
-			this.isRunning = true;
-			this.timer = setInterval(() => {
-				this.updateTime();
-			}, 10); // 每10毫秒更新一次
-		}
+		this.isRunning = true;
+		this.timer = setInterval(() => {
+			this.updateTime();
+		}, 10);
 	},
 
 	// 停止计时器
 	stopTimer() {
-		if (this.isRunning) {
-			this.isRunning = false;
-			clearInterval(this.timer);
-		}
+		this.isRunning = false;
+		clearInterval(this.timer);
 	},
 
 	// 重置计时器
@@ -37,22 +40,20 @@ export default {
 		this.hours = 0;
 		this.minutes = 0;
 		this.seconds = 0;
-		this.milliseconds = 0; // 重置毫秒
+		this.milliseconds = 0;
+		this.laps = [0];
 	},
 
 	// 更新时间
 	updateTime() {
-		this.milliseconds += 10; // 每次增加10毫秒
+		this.milliseconds += 10;
 		if (this.milliseconds === 1000) {
-			// 毫秒达到1000时进位到秒
 			this.milliseconds = 0;
 			this.seconds++;
 			if (this.seconds === 60) {
-				// 秒达到60时进位到分钟
 				this.seconds = 0;
 				this.minutes++;
 				if (this.minutes === 60) {
-					// 分钟达到60时进位到小时
 					this.minutes = 0;
 					this.hours++;
 				}
@@ -60,90 +61,223 @@ export default {
 		}
 	},
 
-	// 跳转到详情页面
-	routeDetail() {
-		router.push({
-			uri: "/pages/detail",
-		});
+	// 添加圈速记录
+	addLap() {
+		console.log(this.laps);
+		const totalMilliseconds =
+			this.hours * 3600000 +
+			this.minutes * 60000 +
+			this.seconds * 1000 +
+			this.milliseconds;
+		const relativeMilliseconds = totalMilliseconds - this.lastLapTime;
+
+		const formatTime = (ms) => {
+			const h = Math.floor(ms / 3600000);
+			const m = Math.floor((ms % 3600000) / 60000);
+			const s = Math.floor((ms % 60000) / 1000);
+			const msLeft = ms % 1000;
+
+			return `${h > 0 ? h + ":" : ""}${m < 10 ? "0" : ""}${m}:${
+				s < 10 ? "0" : ""
+			}${s}.${msLeft < 100 ? (msLeft < 10 ? "00" : "0") : ""}${msLeft}`;
+		};
+
+		const lapRecord = {
+			relative: formatTime(relativeMilliseconds),
+			absolute: formatTime(totalMilliseconds),
+		};
+
+		this.laps.unshift(lapRecord); // 将最新圈速插入到顶部
+		console.log(this.lastLapTime);
+		this.lastLapTime = totalMilliseconds; // 更新上一次圈速时间
 	},
 };
 </script>
 
 <template>
+  <div class="container">
+    <text class="tiltle-display">秒表</text>
 
-		<!-- <text class="title">{{ title }}</text> -->
-		<div class="container">
-			<text class="time-display">
-				{{ hours < 10 ? "0" : "" }}{{ hours }}: {{ minutes < 10 ? "0" : ""
-				}}{{ minutes }}: {{ seconds < 10 ? "0" : "" }}{{ seconds }}:
-			</text>
-			<text class="milliseconds-display">
-				{{ milliseconds < 100 ? (milliseconds < 10 ? "00" : "0") : ""
-				}}{{ milliseconds }}
-			</text>
-			<div class="button-group">
-				<input class="btn btn-lightblue" type="button" value="开始" onclick="startTimer" />
-				<input class="btn btn-red" type="button" value="停止" onclick="stopTimer" />
-				<input class="btn btn-green" type="button" value="重置" onclick="resetTimer" />
-			
-		</div>
-	</div>
+    <!-- 显示时间 -->
+    <text class="time-display">
+      {{ hours < 10 ? "0" : "" }}{{ hours }}: {{ minutes < 10 ? "0" : "" }}{{ minutes }}: {{ seconds < 10 ? "0" : "" }}{{
+        seconds }} </text>
+        <text class="time-milliseconds">
+          {{ milliseconds < 100 ? (milliseconds < 10 ? "00" : "0" ) : "" }}{{ milliseconds }} </text>
+            <!-- 按钮组 -->
+            <div class="button-group">
+              <input class="btn1 btn-blue" type="button" value="暂停/开始" onclick="toggleTimer" />
+              <input class="btn2 btn-green" type="button" value="圈速" onclick="addLap" />
+            </div>
+            <!-- 圈速记录 -->
+            <!-- <div class="laps">
+			<text>
+        {{ laps }}
+      </text>
+		</div> -->
+            <div class="laps">
+              <!-- <div class="laps-title">
+      <text class="lap-item">圈数</text>
+      <text class="lap-item">秒差</text>
+      <text class="lap-item">圈速</text>
+    </div> -->
+              <text class="lap-hori">————————</text>
+              <div for="{{laps}}" key="{{$idx}}" class="lap-items">
+                <div class="lap-row">
+                  <text class="lap-item">{{ laps.length - $idx }}</text>
+                  <text class="lap-item item-right">{{ $item.absolute }}</text>
+                </div>
+                <!-- <text class="lap-item">————————</text> -->
+              </div>
+            </div>
+  </div>
 </template>
 
 <style>
-/* mi band 9 screen size 192*490 */
 .container {
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	background-color: black;
-	color: #ffffff;
-	/* width: 192px;
-  height: 490px; */
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: black;
+  color: #ffffff;
 }
 
-/* .title {
-  flex-direction: column;
-	font-size: 15px;
-	align-items: center;
-	background-color: black;
-	color: #ffffff;
-  margin-top: 0;
-} */
+.tiltle-display {
+  padding-top: 5px;
+  font-size: 20px;
+}
 
 .time-display {
-	font-size: 30px;
+  padding-top: 50px;
+  font-size: 40px;
 }
 
-.milliseconds-display {
-	font-size: 15px;
+.time-milliseconds {
+  font-size: 20px;
+  margin-bottom: 20px;
 }
 
-.button-group button {
-	display: flex;
-	flex-direction: column; /* 垂直排列按钮 */
+.button-group {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  /* 水平排列按钮 */
+  margin-bottom: 20px;
 }
 
-.btn {
-	width: 154px;
-	height: 48px;
-	margin-top: 20px;
-	border-radius: 5px;
-	/* background-color: lightblue; */
-	font-size: 20px;
-	margin-top: 20px; /* 调整按钮之间的间距 */
-	border-radius: 5px;
-	color: #ffffff;
+.btn1 {
+  width: 80px;
+  /* 按钮宽度 */
+  height: 80px;
+  /* 按钮高度 */
+  border-radius: 50%;
+  /* 圆形按钮 */
+  font-size: 16px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn2 {
+  width: 80px;
+  /* 按钮宽度 */
+  height: 80px;
+  /* 按钮高度 */
+  border-radius: 50%;
+  /* 圆形按钮 */
+  font-size: 16px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 12px;
+  /* 按钮之间的间距 */
 }
 
 .btn-blue {
-  background-color: #03A9F4;
+  background-color: #3abbf7;
+  /* 蓝色按钮 */
 }
 
-.btn-red {
-  background-color: #F96A5F;
-}
 .btn-green {
-  background-color: #00BCD4;
+  background-color: #add400;
+  /* 青色按钮 */
 }
-</style>
+
+.laps {
+  padding-left: 6px;
+  width: 180px;
+  /* Adjust width as needed */
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  /* Ensures vertical stacking of items */
+  gap: 3px;
+  /* Adds spacing between lap items */
+}
+
+.laps-title {
+  width: 180px;
+  display: flex;
+  font-size: 20px;
+  justify-content: space-between;
+  /* Aligns content horizontally within each lap item */
+  align-items: center;
+  /* Vertically aligns the content of each lap item */
+  padding: 1px;
+  /* Optional: Adds padding for better spacing inside each item */
+  border-radius: 5%;
+  /* 圆形按钮 */
+}
+
+.lap-items {
+  width: 170px;
+  font-size: 20px;
+  align-items: center;
+  /* Vertically aligns the content of each lap item */
+  padding: 1px;
+  /* Optional: Adds padding for better spacing inside each item */
+}
+
+.lap-item {
+  border: bottom 1px #ffffff;
+  width: 60px;
+  display: flex;
+  font-size: 20px;
+  /* Aligns content horizontally within each lap item */
+  align-items: center;
+  /* Vertically aligns the content of each lap item */
+  padding: 1px;
+  /* Optional: Adds padding for better spacing inside each item */
+  border-radius: 5%;
+  /* 圆形按钮 */
+}
+
+.lap-hori {
+  border: bottom 1px #ffffff;
+  width: 180px;
+  display: flex;
+  font-size: 20px;
+  /* Aligns content horizontally within each lap item */
+  align-items: center;
+  /* Vertically aligns the content of each lap item */
+  padding: 6px;
+  /* Optional: Adds padding for better spacing inside each item */
+  border-radius: 5%;
+  /* 圆形按钮 */
+}
+
+.item-right {
+  width: 100px;
+  padding-left: -70px;
+  font-size: 20px;
+}
+
+.lap-row {
+  align-items: center;
+  /* Vertically aligns the content of each lap item */
+  justify-content: space-evenly;
+  /* Aligns content horizontally within each lap item */
+}</style>
